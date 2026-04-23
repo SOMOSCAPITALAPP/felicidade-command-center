@@ -3,6 +3,7 @@ import {
   GeneratedContent,
   ListingVersion,
   MarketingAngle,
+  Platform,
   Product,
   QueueItem,
   VisualBrief,
@@ -150,7 +151,7 @@ export function saveQueueItem(item: QueueItem) {
 
 export function buildDailyPriorities(): DailyPriority[] {
   return demoProducts
-    .map((product) => ({
+    .map((product): Omit<DailyPriority, "rank_position"> => ({
       id: `${product.id}-priority`,
       product_id: product.id,
       priority_score: calculatePriorityScore({
@@ -162,9 +163,10 @@ export function buildDailyPriorities(): DailyPriority[] {
         manualPriority: product.manual_priority,
       }),
       recommended_angle: product.emotional_angles[0] ?? "angle premium",
-      recommended_platform: product.bestseller_flag ? "instagram" : "facebook",
+      recommended_platform: (product.bestseller_flag
+        ? "instagram"
+        : "facebook") as Platform,
       justification: `${product.name} combine marge, potentiel narratif et action marketing immediate.`,
-      rank_position: 0,
     }))
     .sort((a, b) => b.priority_score - a.priority_score)
     .slice(0, 3)
