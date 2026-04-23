@@ -101,6 +101,8 @@ export function VisualsWorkbench() {
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             {[
               ["Type de visuel", result.visual_type],
+              ["Format vertical", result.orientation],
+              ["Spec photo", result.photo_spec],
               ["Texte principal", result.primary_text],
               ["Texte secondaire", result.secondary_text],
               ["Ambiance", result.mood],

@@ -89,6 +89,8 @@ export type VisualBrief = {
   platform: Platform;
   marketing_angle: string;
   visual_type: "premium" | "emotion" | "gift" | "minimalist";
+  orientation: string;
+  photo_spec: string;
   primary_text: string;
   secondary_text: string;
   mood: string;
