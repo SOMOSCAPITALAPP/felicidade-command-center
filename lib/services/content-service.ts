@@ -152,6 +152,7 @@ export async function generateContent(input: GenerateContentInput) {
     : [savedVariants[0], ...demoContents].slice(0, 6);
 
   return {
+    generationMode: aiResult?.variants?.length ? "openai" : "demo",
     product,
     variants: savedVariants,
     latest: latest.slice(0, 6),
