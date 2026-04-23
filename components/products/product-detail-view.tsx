@@ -4,13 +4,25 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { demoContents, demoListingVersions, demoVisualBriefs } from "@/lib/data/demo-store";
+import {
+  fetchGeneratedContent,
+  fetchListingVersions,
+  fetchVisualBriefs,
+} from "@/lib/supabase/queries";
+import { hasSupabase } from "@/lib/services/runtime-service";
 import { Product } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils/format";
 
-export function ProductDetailView({ product }: { product: Product }) {
-  const relatedContent = demoContents.filter((item) => item.product_id === product.id).slice(0, 3);
-  const relatedListings = demoListingVersions.filter((item) => item.product_id === product.id).slice(0, 1);
-  const relatedBriefs = demoVisualBriefs.filter((item) => item.product_id === product.id).slice(0, 1);
+export async function ProductDetailView({ product }: { product: Product }) {
+  const relatedContent = hasSupabase()
+    ? await fetchGeneratedContent(product.id)
+    : demoContents.filter((item) => item.product_id === product.id).slice(0, 3);
+  const relatedListings = hasSupabase()
+    ? await fetchListingVersions(product.id)
+    : demoListingVersions.filter((item) => item.product_id === product.id).slice(0, 1);
+  const relatedBriefs = hasSupabase()
+    ? await fetchVisualBriefs(product.id)
+    : demoVisualBriefs.filter((item) => item.product_id === product.id).slice(0, 1);
 
   return (
     <div className="grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">

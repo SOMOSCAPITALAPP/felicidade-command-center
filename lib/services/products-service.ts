@@ -1,15 +1,25 @@
-import { demoProducts, getProductById, upsertProduct } from "@/lib/data/demo-store";
+import { getProductById, demoProducts, upsertProduct } from "@/lib/data/demo-store";
+import { fetchProductById, fetchProducts, upsertProductRow } from "@/lib/supabase/queries";
 import { Product } from "@/lib/types";
+import { hasSupabase } from "@/lib/services/runtime-service";
 
-export function listProducts() {
+export async function listProducts() {
+  if (hasSupabase()) {
+    return fetchProducts();
+  }
+
   return demoProducts;
 }
 
-export function getProduct(productId: string) {
+export async function getProduct(productId: string) {
+  if (hasSupabase()) {
+    return fetchProductById(productId);
+  }
+
   return getProductById(productId);
 }
 
-export function createOrUpdateProduct(input: Partial<Product>) {
+export async function createOrUpdateProduct(input: Partial<Product>) {
   const product: Product = {
     id: input.id ?? crypto.randomUUID(),
     name: input.name ?? "Nouveau produit Felicidade",
@@ -34,6 +44,10 @@ export function createOrUpdateProduct(input: Partial<Product>) {
     manual_priority: input.manual_priority ?? 50,
     created_at: input.created_at ?? new Date().toISOString(),
   };
+
+  if (hasSupabase()) {
+    return upsertProductRow(product);
+  }
 
   return upsertProduct(product);
 }

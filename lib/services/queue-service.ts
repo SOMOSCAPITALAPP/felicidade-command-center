@@ -1,21 +1,39 @@
 import { demoQueue, getProductById, saveQueueItem, demoContents, demoVisualBriefs } from "@/lib/data/demo-store";
 import { buildMakePayload } from "@/lib/utils/make-payload";
 import { QueueItem } from "@/lib/types";
+import {
+  fetchGeneratedContent,
+  fetchProductById,
+  fetchQueueItems,
+  fetchVisualBriefs,
+  insertQueueItem,
+} from "@/lib/supabase/queries";
+import { hasSupabase } from "@/lib/services/runtime-service";
 
-export function listQueueItems() {
+export async function listQueueItems() {
+  if (hasSupabase()) {
+    return fetchQueueItems();
+  }
+
   return demoQueue;
 }
 
-export function createQueueItem(input: {
+export async function createQueueItem(input: {
   productId: string;
   generatedContentId: string;
   visualBriefId?: string | null;
   scheduledAt: string;
 }) {
-  const product = getProductById(input.productId);
-  const content = demoContents.find((item) => item.id === input.generatedContentId);
+  const product = hasSupabase()
+    ? await fetchProductById(input.productId)
+    : getProductById(input.productId);
+  const contentPool = hasSupabase()
+    ? await fetchGeneratedContent()
+    : demoContents;
+  const visualPool = hasSupabase() ? await fetchVisualBriefs() : demoVisualBriefs;
+  const content = contentPool.find((item) => item.id === input.generatedContentId);
   const visualBrief = input.visualBriefId
-    ? demoVisualBriefs.find((item) => item.id === input.visualBriefId) ?? null
+    ? visualPool.find((item) => item.id === input.visualBriefId) ?? null
     : null;
 
   if (!product || !content) {
@@ -39,5 +57,5 @@ export function createQueueItem(input: {
     created_at: new Date().toISOString(),
   };
 
-  return saveQueueItem(item);
+  return hasSupabase() ? insertQueueItem(item) : saveQueueItem(item);
 }

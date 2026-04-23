@@ -7,7 +7,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const product = getProduct(id);
+  const product = await getProduct(id);
 
   if (!product) {
     return NextResponse.json({ error: "Produit introuvable" }, { status: 404 });

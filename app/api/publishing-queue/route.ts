@@ -3,13 +3,13 @@ import { NextResponse } from "next/server";
 import { createQueueItem, listQueueItems } from "@/lib/services/queue-service";
 
 export async function GET() {
-  return NextResponse.json({ items: listQueueItems() });
+  return NextResponse.json({ items: await listQueueItems() });
 }
 
 export async function POST(request: Request) {
   try {
     const payload = await request.json();
-    const item = createQueueItem(payload);
+    const item = await createQueueItem(payload);
 
     return NextResponse.json({ item }, { status: 201 });
   } catch (error) {
