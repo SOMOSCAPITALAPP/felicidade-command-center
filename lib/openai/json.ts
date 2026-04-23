@@ -43,7 +43,6 @@ export async function generateJsonObject<T>(input: {
 
   const completion = await client.chat.completions.create({
     model: input.model ?? process.env.OPENAI_MODEL ?? "gpt-5-mini",
-    temperature: input.temperature ?? 0.7,
     messages: [
       {
         role: "developer",
