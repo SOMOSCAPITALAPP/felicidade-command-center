@@ -18,6 +18,8 @@ export function ContentWorkbench({
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [generationMode, setGenerationMode] = useState<string | null>(null);
   const [form, setForm] = useState({
     productId: initialProductId ?? "",
     platform: "instagram",
@@ -48,12 +50,22 @@ export function ContentWorkbench({
 
   async function handleGenerate() {
     setLoading(true);
+    setError(null);
     const response = await fetch("/api/generate-content", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
     const data = await response.json();
+    if (!response.ok) {
+      setResult(null);
+      setGenerationMode(null);
+      setError(data.error ?? "Erreur generation contenu");
+      setLoading(false);
+      return;
+    }
+
+    setGenerationMode(data.generationMode ?? null);
     setResult({ variants: data.variants ?? [] });
     setLoading(false);
   }
@@ -180,6 +192,16 @@ export function ContentWorkbench({
             {loading ? "Generation..." : "Generer contenu"}
           </Button>
         </div>
+        {generationMode ? (
+          <div className="mt-4 rounded-2xl border border-line bg-white/70 p-4 text-sm text-muted">
+            Mode actif : {generationMode}
+          </div>
+        ) : null}
+        {error ? (
+          <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {error}
+          </div>
+        ) : null}
       </Card>
 
       <Card className="p-6">

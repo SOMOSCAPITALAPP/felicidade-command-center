@@ -65,5 +65,11 @@ export async function generateJsonObject<T>(input: {
     return null;
   }
 
-  return JSON.parse(extractJsonPayload(text)) as T;
+  try {
+    return JSON.parse(extractJsonPayload(text)) as T;
+  } catch {
+    throw new Error(
+      "OpenAI a repondu, mais pas dans un JSON exploitable. Verifie la cle API, le modele et le format de sortie.",
+    );
+  }
 }
