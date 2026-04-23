@@ -152,3 +152,10 @@ export type GenerateVisualBriefInput = {
   platform: Platform;
   marketingAngle: string;
 };
+
+export type VisualPreview = {
+  image_data_url: string;
+  image_model: string;
+  size: string;
+  generation_mode: "openai";
+};

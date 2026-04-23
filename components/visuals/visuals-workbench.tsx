@@ -10,6 +10,13 @@ export function VisualsWorkbench() {
   const [products, setProducts] = useState<Product[]>([]);
   const [result, setResult] = useState<VisualBrief | null>(null);
   const [loading, setLoading] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<{
+    image_data_url: string;
+    image_model: string;
+    size: string;
+  } | null>(null);
   const [form, setForm] = useState({
     productId: "",
     platform: "instagram",
@@ -32,6 +39,8 @@ export function VisualsWorkbench() {
 
   async function handleSubmit() {
     setLoading(true);
+    setPreviewError(null);
+    setPreviewImage(null);
     const response = await fetch("/api/generate-visual-brief", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -40,6 +49,42 @@ export function VisualsWorkbench() {
     const data = await response.json();
     setResult(data.brief);
     setLoading(false);
+  }
+
+  async function handleGeneratePreview() {
+    if (!result) {
+      return;
+    }
+
+    setPreviewLoading(true);
+    setPreviewError(null);
+
+    const response = await fetch("/api/generate-visual-preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productId: form.productId,
+        platform: form.platform,
+        marketingAngle: form.marketingAngle,
+        primaryText: result.primary_text,
+        secondaryText: result.secondary_text,
+        mood: result.mood,
+        composition: result.composition,
+        designInstructions: result.design_instructions,
+        photoSpec: result.photo_spec,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setPreviewError(data.error ?? "Erreur generation photo");
+      setPreviewLoading(false);
+      return;
+    }
+
+    setPreviewImage(data);
+    setPreviewLoading(false);
   }
 
   return (
@@ -92,28 +137,75 @@ export function VisualsWorkbench() {
           <Button disabled={loading || !form.productId} onClick={handleSubmit}>
             {loading ? "Generation..." : "Generer brief"}
           </Button>
+          <Button
+            disabled={previewLoading || !result}
+            onClick={handleGeneratePreview}
+            variant="secondary"
+          >
+            {previewLoading ? "Generation photo..." : "Generer photo"}
+          </Button>
         </div>
       </Card>
 
       <Card className="p-6">
         <h4 className="text-lg font-semibold">Resultat</h4>
         {result ? (
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {[
-              ["Type de visuel", result.visual_type],
-              ["Format vertical", result.orientation],
-              ["Spec photo", result.photo_spec],
-              ["Texte principal", result.primary_text],
-              ["Texte secondaire", result.secondary_text],
-              ["Ambiance", result.mood],
-              ["Composition", result.composition],
-              ["Instructions design", result.design_instructions],
-            ].map(([label, value]) => (
-              <div key={label} className="rounded-2xl border border-line bg-white/75 p-4">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted">{label}</p>
-                <p className="mt-2 text-sm text-muted">{value}</p>
+          <div className="mt-5 space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              {[
+                ["Type de visuel", result.visual_type],
+                ["Format vertical", result.orientation],
+                ["Spec photo", result.photo_spec],
+                ["Texte principal", result.primary_text],
+                ["Texte secondaire", result.secondary_text],
+                ["Ambiance", result.mood],
+                ["Composition", result.composition],
+                ["Instructions design", result.design_instructions],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-2xl border border-line bg-white/75 p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted">{label}</p>
+                  <p className="mt-2 text-sm text-muted">{value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="rounded-2xl border border-line bg-white/75 p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted">
+                    Preview photo
+                  </p>
+                  <p className="mt-2 text-sm text-muted">
+                    Validation rapide d une direction creative verticale.
+                  </p>
+                </div>
+                {previewImage ? (
+                  <div className="text-xs text-muted">
+                    {previewImage.image_model} | {previewImage.size}
+                  </div>
+                ) : null}
               </div>
-            ))}
+
+              {previewError ? (
+                <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                  {previewError}
+                </div>
+              ) : null}
+
+              {previewImage ? (
+                <div className="mt-4 overflow-hidden rounded-[24px] border border-line bg-[#f3ecdf] p-3">
+                  <img
+                    alt="Preview photo verticale"
+                    className="mx-auto aspect-[4/5] w-full max-w-sm rounded-[20px] object-cover"
+                    src={previewImage.image_data_url}
+                  />
+                </div>
+              ) : (
+                <div className="mt-4 rounded-2xl border border-dashed border-line p-6 text-sm text-muted">
+                  Clique sur "Generer photo" pour obtenir une preview verticale dans l app.
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="mt-5 rounded-2xl border border-dashed border-line p-6 text-sm text-muted">
